@@ -3,14 +3,22 @@ import { defineStore } from 'pinia'
 
 export const useAppStore = defineStore('app', {
   state: () => ({
-    inputs: {}
+    inputs: {},
+    outputs: {},
+    result: null,
   }),
   actions: {
-    setVariable(input) {
+    setInputVariable(input) {
       this.inputs[input.name] = input.value;
     },
-    deleteVariable(name) {
+    deleteInputVariable(name) {
       delete this.inputs[name];
+    },
+    setOutputVariable(output) {
+      this.outputs[output.name] = output.value;
+    },
+    deleteOutputVariable(name) {
+      delete this.outputs[name];
     }
   }
 })

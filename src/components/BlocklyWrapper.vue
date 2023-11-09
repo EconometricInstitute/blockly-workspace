@@ -17,21 +17,7 @@
           <InputPanel />
         </div>
         <div v-if="ioTab == 1" class="iotab">
-          <div v-if="traceOutput">
-            <h4>Your program produced the following output:</h4>
-            <div v-html="outputHTML"></div>
-          </div>
-          <div v-else-if="traceError">
-            <h4>Error while running</h4>
-            <v-alert type="error">
-              The following error occurred while your program was executed:
-              <br />
-              {{traceError}}
-            </v-alert>
-          </div>
-          <div v-else>
-            <h4>This tab will contain the output of your program after you run it.</h4>
-          </div> 
+          <OutputPanel />
         </div>
         <div v-if="ioTab == 2" class="iotab">
             <h4>This is the generated JavaScript code of your program:</h4>
@@ -45,12 +31,19 @@
 <script>
 import BlocklyWorkspace from './BlocklyWorkspace';
 import InputPanel from './InputPanel';
+import OutputPanel from './OutputPanel';
 import toolboxes from './toolboxes';
+
+import { useAppStore } from '@/store/app';
+import { mapState } from 'pinia';
+
+import {evalInWorker} from './blockly_utils';
 
 export default {
     components: {
         BlocklyWorkspace,
-        InputPanel
+        InputPanel,
+        OutputPanel
     },
     data: () => ({
         ioTab: null,
@@ -62,6 +55,7 @@ export default {
         traceError: null
     }),
     computed: {
+        ...mapState(useAppStore, ['inputs', 'outputs']),
         toolbox() {
             return toolboxes['default'];
         }
@@ -104,8 +98,60 @@ export default {
                     };
                     img.src = pngUrl;
             });            
-        }
-    }
+        },
+        run() {
+            console.log("I guess I should run something...");
+            this.submitCode();
+        },
+        submitCode() {
+            this.testOutput = [];
+            //this.runTraceCode(true);
+            this.dirty = true;
+            const generated = this.code.test || '';
+            console.log(this.code);
+            evalInWorker(generated)
+            .then(resp => console.log(generated, resp));
+        },
+        getTestCode() {        
+            let testCode = Object.entries(this.inputs).map(([k,v]) => k+'='+JSON.stringify(v)).join(';\n')+';\n';
+            testCode += this.outputCode;
+            return testCode;
+        },        
+        runTraceCode(fast) {
+            if (!this.worker) { 
+                this.traceOutput = null;
+                this.traceError = null;
+                this.ioTab = 2;
+
+                const script = (fast ? this.getTestCode() : this.code.trace) || '';
+                if (script) {
+                if (fast) {
+                    evalInWorker(script)
+                    .then(res => {
+                        const result = JSON.parse(res);
+                        if (!result.error) {
+                        this.traceOutput = result.data;
+                        }
+                        else {
+                        this.traceError = result.data;
+                        }
+                    });            
+                }
+                else {
+                    const highlight = this.$refs.workspace.highlight;
+                    const finishTrace = this.finishTrace;
+                    const errorTrace = this.errorTrace;
+                    this.worker = evalInWorkerTrace(script, highlight, finishTrace, errorTrace);
+                }
+                }
+                else {
+                this.traceOutput = null;
+                this.traceError = 'Can not run an empty program'; 
+                this.ioTab = 1;
+                }
+            }
+        },
+    },
 }
 </script>
 

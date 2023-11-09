@@ -5,6 +5,7 @@
       <v-app-bar-title>Blockly Workspace</v-app-bar-title>
       <v-btn @click="copy">Copy Image</v-btn>
       <v-btn @click="save">Save Image</v-btn>
+      <v-btn color="primary" @click="run"><v-icon>mdi-play</v-icon>&nbsp;Run</v-btn>
     </v-app-bar>    
     <v-navigation-drawer temporary v-model="drawer">    
     </v-navigation-drawer>
@@ -30,6 +31,9 @@ export default {
     },
     copy() {
       this.$refs.blockly.copy()
+    },
+    run() {
+      this.$refs.blockly.run();
     }
   }
 }

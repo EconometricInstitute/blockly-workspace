@@ -79,9 +79,8 @@ export default {
       //console.log(rawCodeHL);
       return this.preCode
            + rawCodeHL
-           + '\nhighlightBlock(\'\');\n';
-           // TODO: deal with the output
-           //+ outputCode(this.question.exampleOutput, 'runFinished');
+           + '\nhighlightBlock(\'\');\n'
+           + outputCode(this.outputs, 'runFinished');
     },
     getSVG() {
       return getSVG(this.workspace);
@@ -102,12 +101,14 @@ export default {
     updateVarnames() {
       if (this.workspace && this.varnames && this.workspace.getAllBlocks().length == 0) {
         const current = new Set(this.workspace.getAllVariableNames());
-        for (const varname of this.varnames) {
-          if (!current.has(varname)) {
-            this.workspace.createVariable(varname);
-            current.add(varname);
+        this.$nextTick(() => {
+          for (const varname of this.varnames) {
+            if (!current.has(varname)) {
+              this.workspace.createVariable(varname);
+              current.add(varname);
+            }
           }
-        }
+        })
       }
     },
     getWorkspace() {
@@ -115,7 +116,7 @@ export default {
     }
   },
   computed: {
-    ...mapState(useAppStore, ['inputs']),
+    ...mapState(useAppStore, ['inputs', 'outputs']),
     preCode() {
       let result = '/*Defining input variables*/\n';
       result += envToJS(this.inputs);
@@ -124,7 +125,7 @@ export default {
       return result;
     },
     varnames() {
-      return Object.keys(this.inputs);
+      return [...Object.keys(this.inputs), ...Object.keys(this.outputs)];
     }
   },
   watch: {

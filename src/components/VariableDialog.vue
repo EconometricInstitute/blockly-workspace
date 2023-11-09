@@ -9,7 +9,7 @@
                         &nbsp;
                         <v-select density="compact" label="Type" v-model="type" @update:modelValue="setType(type)" :items="types" />
                         &nbsp;
-                        <ValueEdit :type="type" :value="value" @update:modelValue="setValue($event)"/>
+                        <ValueEdit v-if="!novalue" :type="type" :value="value" @update:modelValue="setValue($event)"/>
                     </v-row>
                 </v-container>                
             </v-card-text>
@@ -27,7 +27,7 @@ import ValueEdit from './ValueEdit';
 
 export default {
     components: { ValueEdit },
-    props: ['title', 'varname'],
+    props: ['title', 'varname', 'novalue'],
     data: () => ({
         active: false,
         name: null,
@@ -56,7 +56,7 @@ export default {
             this.active = false;
         },
         save() {
-            const result = {name: this.name || this.varname, value: this.value};
+            const result = {name: this.name || this.varname, value: this.novalue ? null : this.value};
             this.$emit('newVariable', result);
             this.active = false;
         },
