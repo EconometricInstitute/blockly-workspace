@@ -41,7 +41,7 @@ export default {
     testingCode: '',
     tracingCode: '',
     runningTrace: false,
-    traceWorker: null,
+    traceWorker: null
   }),
   methods: {
     workspaceChanged() {
@@ -101,14 +101,23 @@ export default {
     updateVarnames() {
       if (this.workspace && this.varnames && this.workspace.getAllBlocks().length == 0) {
         const current = new Set(this.workspace.getAllVariableNames());
-        this.$nextTick(() => {
-          for (const varname of this.varnames) {
-            if (!current.has(varname)) {
-              this.workspace.createVariable(varname);
-              current.add(varname);
-            }
+        const to_add = new Set();
+        for (const varname of this.varnames) {
+          if (!current.has(varname)) {
+            to_add.add(varname);
+            current.add(varname);
           }
-        })
+        }
+        if (to_add.size > 0) {
+          const toolbox = this.workspace.toolbox_;
+          // Clearing the selection is needed because of a weird glitch in Blockly
+          toolbox.clearSelection();
+          this.$nextTick(() => {
+            for (const newVar of to_add) {
+              this.workspace.createVariable(newVar);
+            }
+          });
+        }
       }
     },
     getWorkspace() {

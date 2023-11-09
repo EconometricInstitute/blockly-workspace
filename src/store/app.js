@@ -14,6 +14,14 @@ export const useAppStore = defineStore('app', {
     deleteInputVariable(name) {
       delete this.inputs[name];
     },
+    setOutputs(outputs) {
+      for (const key of Object.keys(this.outputs)) {
+        this.outputs[key] = outputs[key];
+      }
+    },
+    setResult(result) {
+      this.result = result;
+    },
     setOutputVariable(output) {
       this.outputs[output.name] = output.value;
     },

@@ -1,31 +1,32 @@
 <template>
-    <div class="question-container">
-    <div class="question-main">
-      <div class="flex-grow-1">
-        <BlocklyWorkspace :toolbox="toolbox" ref="workspace" @code="setCode" />
-      </div>
+    <div class="outer-container">
+        <div class="question-container">
+            <div class="question-main">
+                <div class="flex-grow-1 workspace-wrapper">
+                    <BlocklyWorkspace :toolbox="toolbox" ref="workspace" @code="setCode" />
+                </div>
+            </div>
+            <div class="question-io">
+                <v-tabs class="question-iotabs" bg-color="primary" dark v-model="ioTab">
+                    <v-tab>Input</v-tab>
+                    <v-tab>Output</v-tab>
+                    <v-tab>Code</v-tab>
+                </v-tabs>
+                <div class="question-iocontent">
+                    <div v-if="ioTab == 0" class="iotab">
+                        <InputPanel />
+                    </div>
+                    <div v-if="ioTab == 1" class="iotab">
+                        <OutputPanel />
+                    </div>
+                    <div v-if="ioTab == 2" class="iotab">
+                        <h4>This is the generated JavaScript code of your program:</h4>
+                        <pre class="code"><code class="code">{{ code.display }}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>   
     </div>
-    <div class="question-io">
-      <v-tabs class="question-iotabs" bg-color="primary" dark
-        v-model="ioTab">
-        <v-tab>Input</v-tab>
-        <v-tab>Output</v-tab>
-        <v-tab>Code</v-tab>
-      </v-tabs>
-      <div class="question-iocontent">
-        <div v-if="ioTab == 0" class="iotab">
-          <InputPanel />
-        </div>
-        <div v-if="ioTab == 1" class="iotab">
-          <OutputPanel />
-        </div>
-        <div v-if="ioTab == 2" class="iotab">
-            <h4>This is the generated JavaScript code of your program:</h4>
-          <pre class="code"><code class="code">{{code.display}}</code></pre>
-        </div>
-      </div>
-    </div>
-  </div>
 </template>
 
 <script>
@@ -35,9 +36,12 @@ import OutputPanel from './OutputPanel';
 import toolboxes from './toolboxes';
 
 import { useAppStore } from '@/store/app';
-import { mapState } from 'pinia';
+import { mapState, mapActions } from 'pinia';
 
 import {evalInWorker} from './blockly_utils';
+import { evalScripts } from './blockly_utils';
+
+import { copyHtml, copyImg } from '@/util/clipboard';
 
 export default {
     components: {
@@ -58,9 +62,18 @@ export default {
         ...mapState(useAppStore, ['inputs', 'outputs']),
         toolbox() {
             return toolboxes['default'];
-        }
+        },
+        outputCode() {
+            let res = 'const $resultObj = {};\n';
+            for (const key of Object.keys(this.outputs)) {
+                res += '$resultObj.'+key+' = '+key+';\n';
+            }
+            res += 'return $resultObj;';
+            return res;      
+        },        
     },
     methods: {
+        ...mapActions(useAppStore, ['setOutputs', 'setResult']),
         setCode(code) {
             this.code = code
         },
@@ -77,43 +90,42 @@ export default {
             });
         },
         copy() {
+            // const svg = this.$refs.workspace.getSVG();
+            // copyHtml(svg);
             this.$refs.workspace.getPNGUrl().then(
-                pngUrl => {
-                    const img = document.createElement('img');
-                    document.body.appendChild(img);
-                    img.onload = () => {
-                        if (document.createRange) {
-                            const range = document.createRange();
-                            range.selectNode(img)
-                            const select = window.getSelection();
-                            select.removeAllRanges();
-                            select.addRange(range);
-                        } else {
-                            const range = document.body.createTextRange();
-                            range.moveToElementText(img);
-                            range.select();
-                        }
-                        document.execCommand('copy');
-                        document.body.removeChild(img);
-                    };
-                    img.src = pngUrl;
+                pngURL => {
+                    // const html = `<h3>Blockly Program</h3>\n<img src="${pngURL}" />\n<p>Hi!</p>`;
+                    // copyHtml(html);
+                    copyImg(pngURL);
             });            
         },
         run() {
-            console.log("I guess I should run something...");
             this.submitCode();
         },
         submitCode() {
             this.testOutput = [];
             //this.runTraceCode(true);
             this.dirty = true;
-            const generated = this.code.test || '';
-            console.log(this.code);
-            evalInWorker(generated)
-            .then(resp => console.log(generated, resp));
+            const code = this.getTestCode();
+            evalScripts([code])
+            .then(resp => {
+                const result = resp[0];
+                this.setResult(result);
+                if (!result.error) {
+                    this.setOutputs(result.data);
+                }
+                this.ioTab = 1;
+            });
+            // evalInWorker(code)
+            // .then(resp => console.log(code, resp));
         },
-        getTestCode() {        
+        getTestCode() {
+            const generated = this.code.test || '';
+            const solution = generated.substring(generated.indexOf("\n") + 1).trim() + '\n';
+            const declr = generated.substring(0, generated.indexOf("\n")).trim() + '\n\n';
             let testCode = Object.entries(this.inputs).map(([k,v]) => k+'='+JSON.stringify(v)).join(';\n')+';\n';
+            testCode = declr + testCode;
+            testCode += solution;
             testCode += this.outputCode;
             return testCode;
         },        
@@ -157,18 +169,27 @@ export default {
 
 
 <style scoped>
+.outer-container {
+    justify-content: center;
+}
 .question-container {
-  height: calc(100vh - 120px);
+  height: calc(100vh - 64px);
+  margin: 0 auto;
+  max-width: 1440px;
 }
 
 .question-main {
-  height: 66.6%;
+  height: 62.5%;
   display: flex;
   flex-direction: row;
 }
 
+.workspace-wrapper {
+    margin: 0 auto;
+}
+
 .question-io {
-  height: 33.3%;
+  height: 37%;
   width: 100%;
 }
 

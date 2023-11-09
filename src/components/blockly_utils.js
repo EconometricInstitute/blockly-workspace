@@ -222,6 +222,7 @@ async function evalInWorker(script) {
     const worker = new Worker(workerScriptURL);
     const result = new Promise((resolve, reject) => {
         worker.onmessage = (resp) => {
+            console.log(resp);
             //console.log(resp.data);
             if (resp.error) {
                 reject(resp.data);
