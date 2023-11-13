@@ -3,7 +3,8 @@
         <v-btn color="primary" @click="addInput">Add input variable</v-btn>
         <VariableDialog title="Add new input variable" :varname="newVarName" ref="varDialog" @newVariable="setInputVariable($event)" />
         <h3>The following inputs are used for your program</h3>
-        <EnvironmentDisplay :data="inputs" :deleteVar="deleteInputVariable" />
+        <EnvironmentDisplay :data="inputs" :deleteVar="deleteVariable" />
+        <ConfirmDialog ref="confirmDialog" />
     </div>
 </template>
 
@@ -12,11 +13,13 @@ import { useAppStore } from '@/store/app';
 import { mapState, mapActions } from 'pinia';
 import EnvironmentDisplay from './EnvironmentDisplay';
 import VariableDialog from './VariableDialog';
+import ConfirmDialog from './ConfirmDialog';
 
 export default {
     components: {
         EnvironmentDisplay,
-        VariableDialog
+        VariableDialog,
+        ConfirmDialog
     },
     data: () => ({
         // inputs: {},
@@ -41,9 +44,14 @@ export default {
                 i.defaultValue = this.defaultValues[type];
             }
         },
-        // deleteVariable(ev) {
-        //     delete this.inputs[ev];
-        // }
+        deleteVariable(name) {
+            this.$refs.confirmDialog.showDialog(
+                'Remove input variable?',
+                `Are you sure you want to remove the input variable '${name}'?`,
+                'warning',
+                () => this.deleteInputVariable(name)
+            );
+        },
         ...mapActions(useAppStore, ['setInputVariable', 'deleteInputVariable']),
     },
     computed: {
