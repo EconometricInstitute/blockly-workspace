@@ -21,12 +21,32 @@ export default defineConfig({
       autoImport: true,
     }),
     ViteFonts({
-      google: {
+      // google: {
+      //   families: [{
+      //     name: 'Roboto',
+      //     styles: 'wght@100;300;400;500;700;900',
+      //   }],
+      // },
+      custom: {
+        /**
+         * Fonts families lists
+         */
         families: [{
+          /**
+           * Name of the font family.
+           */
           name: 'Roboto',
-          styles: 'wght@100;300;400;500;700;900',
+          /**
+           * Local name of the font. Used to add `src: local()` to `@font-rule`.
+           */
+          local: 'Roboto',
+          /**
+           * Regex(es) of font files to import. The names of the files will
+           * predicate the `font-style` and `font-weight` values of the `@font-rule`'s.
+           */
+          src: './src/assets/fonts/Roboto/*.ttf',
         }],
-      },
+      }   
     }),
   ],
   define: { 'process.env': {} },
