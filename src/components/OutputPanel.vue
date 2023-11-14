@@ -42,7 +42,7 @@ export default {
     }),
     methods: {
         addOutput() {
-            this.$refs.varDialog.showDialog('Add new output variable', newVarName, 'Add Variable',  true);
+            this.$refs.varDialog.showDialog('Add new output variable', this.newVarName, 'Add Variable',  true);
         },
         setType(i, type) {
             if (type != i.prevType) {
