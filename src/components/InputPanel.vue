@@ -1,9 +1,9 @@
 <template>
     <div>
         <v-btn color="primary" @click="addInput">Add input variable</v-btn>
-        <VariableDialog title="Add new input variable" :varname="newVarName" ref="varDialog" @newVariable="setInputVariable($event)" />
+        <VariableDialog ref="varDialog" @newVariable="setInputVariable($event)" />
         <h3>The following inputs are used for your program</h3>
-        <EnvironmentDisplay :data="inputs" :deleteVar="deleteVariable" />
+        <EnvironmentDisplay :data="inputs" :deleteVar="deleteVariable" :editVar="editVariable" />
         <ConfirmDialog ref="confirmDialog" />
     </div>
 </template>
@@ -34,7 +34,7 @@ export default {
     }),
     methods: {
         addInput() {
-            this.$refs.varDialog.showDialog();
+            this.$refs.varDialog.showDialog('Add new input variable', this.newVarName);
         },
         setType(i, type) {
             if (type != i.prevType) {
@@ -43,6 +43,9 @@ export default {
                 i.prevType = type;
                 i.defaultValue = this.defaultValues[type];
             }
+        },
+        editVariable(name) {
+            this.$refs.varDialog.showDialog('Edit input variable', name, 'Update variable', false, true);
         },
         deleteVariable(name) {
             this.$refs.confirmDialog.showDialog(

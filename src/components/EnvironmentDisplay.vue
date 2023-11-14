@@ -28,6 +28,7 @@
                         <v-icon v-if="compare[varname]" color="success">mdi-check</v-icon>
                         <v-icon v-else color="error">mdi-alert-circle</v-icon>
                     </template>
+                    <v-icon v-if="editVar" @click="editVar(varname)">mdi-pencil</v-icon>
                     <v-icon v-if="deleteVar" @click="deleteVar(varname)">mdi-delete</v-icon>
                     A variable with name <code class="varname">{{ varname }}</code>
                     which holds
@@ -51,7 +52,8 @@ export default {
       'data',
       'reference',
       'compare',
-      'deleteVar'
+      'deleteVar',
+      'editVar'
     ],
     components: {
       ValueDisplay

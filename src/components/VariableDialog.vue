@@ -5,7 +5,7 @@
             <v-card-text>
                 <v-container>
                     <v-row>
-                        <v-text-field density="compact" label="Variable name" :model-value="varname" @update:modelValue="name = $event" />
+                        <v-text-field density="compact" label="Variable name" :disabled="fixedname" :readonly="fixedname" v-model="name" />
                         &nbsp;
                         <v-select density="compact" label="Type" v-model="type" @update:modelValue="setType(type)" :items="types" />
                         &nbsp;
@@ -15,7 +15,7 @@
             </v-card-text>
             <v-card-actions>
                 <v-spacer />
-                <v-btn color="primary" @click="save">Add Variable</v-btn>
+                <v-btn color="primary" @click="save">{{ okLabel }}</v-btn>
                 <v-btn color="danger" @click="hide">Cancel</v-btn>
             </v-card-actions>
         </v-card>
@@ -27,10 +27,13 @@ import ValueEdit from './ValueEdit';
 
 export default {
     components: { ValueEdit },
-    props: ['title', 'varname', 'novalue'],
     data: () => ({
+        title: '',
+        novalue: false,
+        fixedname: false,
         active: false,
-        name: null,
+        name: '',
+        okLabel: 'Add Variable',
         type: 'text',
         prevType: 'text',
         value: 'some text',
@@ -45,12 +48,18 @@ export default {
 
     }),
     methods: {
-        showDialog() {
-            this.active = true;
+        showDialog(title, varname, okLabel='Add Variable', novalue=false, fixedname=false) {
+            this.title = title;
+            this.name = varname;
+            this.novalue = novalue;
+            this.fixedname = fixedname;
+            this.okLabel = okLabel;
+
             this.type = 'text';
             this.prevType = 'text';
             this.value = 'some text';
-            this.name = this.varname;
+
+            this.active = true;
         },
         hide() {
             this.active = false;
