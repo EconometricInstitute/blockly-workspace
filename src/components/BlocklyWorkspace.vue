@@ -26,16 +26,19 @@ export default {
         toolbox: this.toolbox,
         sounds: false
     });
-    if (this.inputAnswer && this.inputAnswer.xml) {
-      const dom = Blockly.Xml.textToDom(this.inputAnswer.xml);
-      Blockly.Xml.domToWorkspace(dom, this.workspace);
+    if (this.workspaceJson) {
+      Blockly.serialization.workspaces.load(JSON.parse(this.workspaceJson), this.workspace);
     }
+    // if (this.inputAnswer && this.inputAnswer.xml) {
+    //   const dom = Blockly.Xml.textToDom(this.inputAnswer.xml);
+    //   Blockly.Xml.domToWorkspace(dom, this.workspace);
+    // }
     this.workspace.addChangeListener(this.workspaceChanged);
     this.updateVarnames();
   },
   data: () => ({
     divId: 'blockly_workspace_div_'+(WORKSPACE_ID++),
-    workspace: null,
+    //workspace: null,
     workspaceXML: '',
     displayCode: '',
     testingCode: '',
@@ -45,7 +48,9 @@ export default {
   }),
   methods: {
     clear() {
-      this.workspace.clear();
+      if (this.workspace) {
+        this.workspace.clear();
+      }
     },
     workspaceChanged() {
       this.$nextTick(() => {
@@ -135,7 +140,7 @@ export default {
     }
   },
   computed: {
-    ...mapState(useAppStore, ['inputs', 'outputs']),
+    ...mapState(useAppStore, ['inputs', 'outputs', 'workspaceJson']),
     preCode() {
       let result = '/* Defining input variables */\n';
       result += envToJS(this.inputs);

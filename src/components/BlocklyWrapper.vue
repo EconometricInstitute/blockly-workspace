@@ -4,7 +4,7 @@
         <div class="question-container">
             <div class="question-main">
                 <div class="flex-grow-1 workspace-wrapper">
-                    <BlocklyWorkspace :toolbox="toolbox" ref="workspace" @code="setCode" />
+                    <BlocklyWorkspace v-if="!loading" :toolbox="toolbox" ref="workspace" @code="setCode" />
                 </div>
             </div>
             <div class="question-io">
@@ -75,7 +75,7 @@ export default {
     },
     watch: {
       workspaceJson(newValue) {
-        if (newValue && newValue != this?.code?.json) {
+        if (this.$refs.workspace && newValue && newValue != this?.code?.json) {
           this.$refs.workspace.setWorkspaceJson(newValue);
         }
       }
