@@ -42,23 +42,33 @@ function envToJS(data)
 
 function getPNGUrl(workspace) {
     workspace.highlightBlock('');
-    return new Promise((resolve) => {
-        const rawElement = workspace.svgBlockCanvas_.ownerSVGElement;
-        domtoimage.toPng(rawElement)
-            .then(url => {
-                resolve(url);
-            })
+    return new Promise((resolve, reject) => {
+        try {
+            const rawElement = workspace.svgBlockCanvas_.ownerSVGElement;
+            domtoimage.toPng(rawElement)
+                .then(url => {
+                    resolve(url);
+                })
+        }
+        catch (err) {
+            reject(err);
+        }
     });
 }
 
 function getPNGBlob(workspace) {
     workspace.highlightBlock('');
-    return new Promise((resolve) => {
-        const rawElement = workspace.svgBlockCanvas_.ownerSVGElement;
-        domtoimage.toBlob(rawElement)
-            .then(url => {
-                resolve(url);
-            })
+    return new Promise((resolve, reject) => {
+        try {
+            const rawElement = workspace.svgBlockCanvas_.ownerSVGElement;
+            domtoimage.toBlob(rawElement)
+                .then(url => {
+                    resolve(url);
+                })
+        }
+        catch (err) {
+            reject(err);
+        }
     });
 }
 
