@@ -18,6 +18,21 @@ export function copyHtml(html) {
     document.body.removeChild(el);
 }
 
+export function copyElement(el) {
+    const range = document.createRange();
+    range.selectNode(el);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    try {
+        document.execCommand('copy');
+    }
+    catch (err) {
+        console.log('Failed to copy the contents to the clipboard', err);
+    }
+    selection.removeAllRanges();
+}
+
 export function copyImg(src) {
     const el = document.createElement('div');
     const img = document.createElement('img');

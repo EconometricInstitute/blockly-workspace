@@ -40,6 +40,10 @@ function envToJS(data)
     return res;
 }
 
+function getWorkspaceSVGNodeCopy(workspace) {
+    return workspace.svgBlockCanvas_ownerSVGElement.cloneNode(true);
+}
+
 function getPNGUrl(workspace) {
     workspace.highlightBlock('');
     return new Promise((resolve, reject) => {
@@ -47,8 +51,12 @@ function getPNGUrl(workspace) {
             const rawElement = workspace.svgBlockCanvas_.ownerSVGElement;
             domtoimage.toPng(rawElement)
                 .then(url => {
+                    console.log(url);
                     resolve(url);
                 })
+                .catch(err => {
+                    reject(err)
+                });
         }
         catch (err) {
             reject(err);
@@ -63,8 +71,12 @@ function getPNGBlob(workspace) {
             const rawElement = workspace.svgBlockCanvas_.ownerSVGElement;
             domtoimage.toBlob(rawElement)
                 .then(url => {
+                    console.log(url);
                     resolve(url);
                 })
+                .catch(err => {
+                    reject(err);
+                });
         }
         catch (err) {
             reject(err);
@@ -89,7 +101,7 @@ function getSVG(workspace) {
       bbox.width}" height="${bbox.height}" viewBox=" ${bbox.x} ${bbox.y} ${bbox.width} ${bbox.height}">${css}">${content}</svg>
     `;
 
-    return xml;
+    return {xml: xml, width: bbox.width, height: bbox.height};
 
     /*
     const cp = workspace.svgBlockCanvas_.cloneNode(true);
@@ -313,6 +325,7 @@ export {
     getPNGBlob,
     makehtml,
     displayEnv,
+    getWorkspaceSVGNodeCopy,
     evalInWorker,
     evalInWorkerTrace,
     evalScripts,
