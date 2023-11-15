@@ -1,5 +1,6 @@
 <template>
     <div class="outer-container">
+        <SaveImageDialog ref="saveImageDialog" />
         <div class="question-container">
             <div class="question-main">
                 <div class="flex-grow-1 workspace-wrapper">
@@ -34,6 +35,7 @@ import BlocklyWorkspace from './BlocklyWorkspace';
 import InputPanel from './InputPanel';
 import OutputPanel from './OutputPanel';
 import toolboxes from './toolboxes';
+import SaveImageDialog from './SaveImageDialog.vue';
 
 import { useAppStore } from '@/store/app';
 import { mapState, mapActions } from 'pinia';
@@ -47,7 +49,8 @@ export default {
     components: {
         BlocklyWorkspace,
         InputPanel,
-        OutputPanel
+        OutputPanel,
+        SaveImageDialog,
     },
     data: () => ({
         ioTab: null,
@@ -78,16 +81,25 @@ export default {
             this.code = code
         },
         save() {
-            this.$refs.workspace.getPNGUrl().then(
-                pngUrl => {
-                    const link = document.createElement('a');
-                    // TODO: add some timestamp?
-                    link.download = 'blockly-program.png';
-                    link.href = pngUrl;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-            });
+            // this.$refs.workspace.getPNGUrl().then(
+            //     pngUrl => {
+            //       try {
+            //           const link = document.createElement('a');
+            //           // TODO: add some timestamp?
+            //           link.download = 'blockly-program.png';
+            //           link.href = pngUrl;
+            //           document.body.appendChild(link);
+            //           link.click();
+            //           document.body.removeChild(link);
+            //       }
+            //       catch (err) {
+            //         console.log(err);
+            //       }
+            // }).catch(err => console.log(err));
+
+            const {xml, width, height } = this.$refs.workspace.getSVG();
+            const svgURI = 'data:image/svg+xml,' + encodeURIComponent(xml);
+            this.$refs.saveImageDialog.showDialog('Save image', svgURI, width, height);
         },
         copy() {
             // const svg = this.$refs.workspace.getSVG();
