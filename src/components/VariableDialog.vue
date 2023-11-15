@@ -7,7 +7,7 @@
                     <v-row>
                         <v-text-field density="compact" label="Variable name" :disabled="fixedname" :readonly="fixedname" v-model="name" />
                         &nbsp;
-                        <v-select density="compact" label="Type" v-model="type" @update:modelValue="setType(type)" :items="types" />
+                        <v-select v-if="!novalue" density="compact" label="Type" v-model="type" @update:modelValue="setType(type)" :items="types" />
                         &nbsp;
                         <ValueEdit v-if="!novalue" :type="type" :value="value" @update:modelValue="setValue($event)"/>
                     </v-row>
