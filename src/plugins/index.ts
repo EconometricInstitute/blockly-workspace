@@ -12,9 +12,9 @@ import pinia from '../store'
 import type { App } from 'vue'
 
 // Pinia plugins
-//import { localStoragePlugin } from '../store/app'
+import { localStoragePlugin } from '../store/app'
 
-// pinia.use(localStoragePlugin);
+pinia.use(localStoragePlugin);
 
 export function registerPlugins (app: App) {
   app

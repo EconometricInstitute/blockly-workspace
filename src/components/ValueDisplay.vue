@@ -39,7 +39,7 @@
                 <tr>
                     <th class="array-value-header" scope="row">Position</th>
                     <td class="array-value-index" v-for="(_, index) in data" :key="'pos-'+index">
-                        {{ index }}
+                        {{ (index+1) }}
                     </td>
                 </tr>
                 <tr>

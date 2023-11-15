@@ -44,16 +44,22 @@ export default {
     traceWorker: null
   }),
   methods: {
+    clear() {
+      this.workspace.clear();
+    },
     workspaceChanged() {
       this.$nextTick(() => {
         const dom = Blockly.Xml.workspaceToDom(this.workspace);
         const xml = Blockly.Xml.domToText(dom);
+        const json = JSON.stringify(Blockly.serialization.workspaces.save(this.workspace));
+        // console.log(json);
         const code = {
           display: this.getDisplayCode(),
           trace: this.getTracingCode(),
           test: this.getTestingCode(),
           svg: this.getSVG(),
-          xml
+          xml,
+          json
         };
         this.$emit('code', code)
       });
@@ -79,6 +85,7 @@ export default {
       //console.log(rawCodeHL);
       return this.preCode
            + rawCodeHL
+           + 'await sleep('+STEP_INTERVAL+');\n'
            + '\nhighlightBlock(\'\');\n'
            + outputCode(this.outputs, 'runFinished');
     },
@@ -122,15 +129,18 @@ export default {
     },
     getWorkspace() {
       return this.workspace;
+    },
+    setWorkspaceJson(json) {
+      Blockly.serialization.workspaces.load(JSON.parse(json), this.workspace);
     }
   },
   computed: {
     ...mapState(useAppStore, ['inputs', 'outputs']),
     preCode() {
-      let result = '/*Defining input variables*/\n';
+      let result = '/* Defining input variables */\n';
       result += envToJS(this.inputs);
       result += '\n';
-      result += '/*Code generated from blocks*/\n';
+      result += '/* Code generated from blocks */\n';
       return result;
     },
     varnames() {

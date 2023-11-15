@@ -187,20 +187,28 @@ function makehtml(data)
 
 const workerScript =
 `
+const $_printed_output = [];
+var window = {
+    alert(line) {
+        $_printed_output.push(line);
+    }
+};
+
 onmessage = function(msg) {
     const payload = msg.data;
     const script = payload.script;
     const id = payload.id;
     try {
         //const data = eval(script);
-        const f = new Function(script);
-        const data = f();
-        postMessage(JSON.stringify({error: false, id, data}));
+        const f = new Function('window', script);
+        const data = f(window);
+        postMessage(JSON.stringify({error: false, id, data, output: $_printed_output}));
     }
     catch(err) {
-        postMessage(JSON.stringify({error: true, id, data: ''+err}));
+        postMessage(JSON.stringify({error: true, id, data: ''+err, output: $_printed_output}));
     }
 };
+
 `;
 const workerScriptURL = URL.createObjectURL(new Blob([workerScript], {type: 'text/javascript'}));
 
@@ -258,14 +266,22 @@ async function evalInWorker(script) {
 }
 
 const TRACE_FUNCTIONS = `
+const $_printed_output = [];
+
+const window = {
+    alert(msg) {
+        $_printed_output.push(msg);
+    }
+}
+
 function highlightBlock(block) {
   postMessage({type: 'highlight', block});
 }
 function runFinished(result) {
-  postMessage({type: 'finish', result});
+  postMessage({type: 'finish', result, output: $_printed_output});
 }
 function runError(err) {
-  postMessage({type: 'error', error: err});
+  postMessage({type: 'error', error: err, output: $_printed_output});
 }
 async function sleep(ms) {
   await new Promise(r => setTimeout(r, ms));;
@@ -285,11 +301,11 @@ function evalInWorkerTrace(script, highlightCallback, finishCallback, errorCallb
             highlightCallback(msg.data.block);
         }
         else if (type == 'finish') {
-            finishCallback(msg.data.result);
+            finishCallback(msg.data.result, msg.data.output);
             worker.terminate();
         }
         else if (type == 'error') {
-            errorCallback(msg.data.error);
+            errorCallback(msg.data.error, msg.data.output);
             worker.terminate();
         }
     };

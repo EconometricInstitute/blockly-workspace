@@ -40,10 +40,9 @@ import SaveImageDialog from './SaveImageDialog.vue';
 import { useAppStore } from '@/store/app';
 import { mapState, mapActions } from 'pinia';
 
-import {evalInWorker} from './blockly_utils';
-import { evalScripts } from './blockly_utils';
+import { evalInWorker, evalInWorkerTrace, evalScripts } from './blockly_utils';
 
-import { copyHtml, copyImg } from '@/util/clipboard';
+import { copyImg } from '@/util/clipboard';
 
 export default {
     components: {
@@ -57,12 +56,11 @@ export default {
         code: {},
         testOutput: [],
         dirty: true,
-        worker: null,
         traceOutput: null,
         traceError: null
     }),
     computed: {
-        ...mapState(useAppStore, ['inputs', 'outputs']),
+        ...mapState(useAppStore, ['inputs', 'outputs', 'worker', 'workspaceJson', 'loading']),
         toolbox() {
             return toolboxes['default'];
         },
@@ -73,30 +71,27 @@ export default {
             }
             res += 'return $resultObj;';
             return res;      
-        },        
+        },
+    },
+    watch: {
+      workspaceJson(newValue) {
+        if (newValue && newValue != this?.code?.json) {
+          this.$refs.workspace.setWorkspaceJson(newValue);
+        }
+      }
     },
     methods: {
-        ...mapActions(useAppStore, ['setOutputs', 'setResult']),
+        ...mapActions(useAppStore, ['setOutputs', 'setResult', 'clearRun', 'setWorker', 'setWorkspaceJson']),
         setCode(code) {
-            this.code = code
+            this.code = code;
+            if (code.json) {
+              this.setWorkspaceJson(code.json);
+            }
+        },
+        clear() {
+          this.$refs.workspace.clear();
         },
         save() {
-            // this.$refs.workspace.getPNGUrl().then(
-            //     pngUrl => {
-            //       try {
-            //           const link = document.createElement('a');
-            //           // TODO: add some timestamp?
-            //           link.download = 'blockly-program.png';
-            //           link.href = pngUrl;
-            //           document.body.appendChild(link);
-            //           link.click();
-            //           document.body.removeChild(link);
-            //       }
-            //       catch (err) {
-            //         console.log(err);
-            //       }
-            // }).catch(err => console.log(err));
-
             const {xml, width, height } = this.$refs.workspace.getSVG();
             const svgURI = 'data:image/svg+xml,' + encodeURIComponent(xml);
             this.$refs.saveImageDialog.showDialog('Save image', svgURI, width, height);
@@ -111,10 +106,24 @@ export default {
                     copyImg(pngURL);
             });            
         },
+        trace() {
+          this.runTraceCode();
+        },
+        stop() {
+          if (this.worker) {
+            this.worker.terminate();
+            this.setWorker(null);
+            this.clearRun();
+            this.$refs.workspace.highlight('');
+            this.setResult({error: true, data: 'The program execution was stopped.'});
+            this.ioTab = 1;
+          }
+        },
         run() {
             this.submitCode();
         },
         submitCode() {
+            this.clearRun();
             this.testOutput = [];
             //this.runTraceCode(true);
             this.dirty = true;
@@ -140,38 +149,56 @@ export default {
             testCode += solution;
             testCode += this.outputCode;
             return testCode;
-        },        
-        runTraceCode(fast) {
+        },
+        finishTrace(data, output) {
+          this.setResult({error: false, data, output})
+          if (data) {
+            this.setOutputs(data);
+          }
+          this.setWorker(null);
+          this.ioTab = 1;
+        },
+        errorTrace(data, output) {
+          // console.log(data, output);
+          this.setResult({error: true, data, output});
+          this.setWorker(null);
+          this.ioTab = 1;
+        },
+        runTraceCode(fast=false) {
             if (!this.worker) { 
+                this.clearRun();
                 this.traceOutput = null;
                 this.traceError = null;
                 this.ioTab = 2;
 
                 const script = (fast ? this.getTestCode() : this.code.trace) || '';
                 if (script) {
-                if (fast) {
-                    evalInWorker(script)
-                    .then(res => {
-                        const result = JSON.parse(res);
-                        if (!result.error) {
-                        this.traceOutput = result.data;
-                        }
-                        else {
-                        this.traceError = result.data;
-                        }
-                    });            
+                  if (fast) {
+                      evalInWorker(script)
+                      .then(res => {
+                          const result = JSON.parse(res);
+                          if (!result.error) {
+                          this.traceOutput = result.data;
+                          }
+                          else {
+                          this.traceError = result.data;
+                          }
+                      });            
+                  }
+                  else {
+                      const highlight = this.$refs.workspace.highlight;
+                      const finishTrace = this.finishTrace;
+                      const errorTrace = this.errorTrace;
+                      this.setWorker(evalInWorkerTrace(script, highlight, finishTrace, errorTrace));
+                  }
                 }
                 else {
-                    const highlight = this.$refs.workspace.highlight;
-                    const finishTrace = this.finishTrace;
-                    const errorTrace = this.errorTrace;
-                    this.worker = evalInWorkerTrace(script, highlight, finishTrace, errorTrace);
-                }
-                }
-                else {
-                this.traceOutput = null;
-                this.traceError = 'Can not run an empty program'; 
-                this.ioTab = 1;
+                  this.setResult(
+                    {error: true, data: 'Can not run an empty program'}
+                  )
+                  // this.traceOutput = null;
+                  // this.traceError = 'Can not run an empty program'; 
+                  this.ioTab = 1;
                 }
             }
         },

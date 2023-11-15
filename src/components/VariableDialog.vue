@@ -37,27 +37,28 @@ export default {
         type: 'text',
         prevType: 'text',
         value: 'some text',
-        types: ['text', 'number', 'boolean', 'list of text', 'list of numbers'],
+        types: ['text', 'number', 'boolean', 'list of text', 'list of numbers', 'list of booleans'],
         defaultValues: {
             text: 'some text',
             number: 0,
             boolean: false,
             'list of text': ['element 1'],
-            'list of numbers': [0]
+            'list of numbers': [1],
+            'list of booleans': [false],
         }
 
     }),
     methods: {
-        showDialog(title, varname, okLabel='Add Variable', novalue=false, fixedname=false) {
+        showDialog(title, varname, okLabel='Add Variable', novalue=false, fixedname=false, type='text', value='some text') {
             this.title = title;
             this.name = varname;
             this.novalue = novalue;
             this.fixedname = fixedname;
             this.okLabel = okLabel;
 
-            this.type = 'text';
-            this.prevType = 'text';
-            this.value = 'some text';
+            this.type = type;
+            this.prevType = type;
+            this.value = value;
 
             this.active = true;
         },
@@ -65,7 +66,7 @@ export default {
             this.active = false;
         },
         save() {
-            const result = {name: this.name || this.varname, value: this.novalue ? null : this.value};
+            const result = {name: this.name || this.varname, value: this.novalue ? null : this.value, type: this.type};
             this.$emit('newVariable', result);
             this.active = false;
         },

@@ -2,8 +2,10 @@
     <div>
         <v-btn color="primary" @click="addInput">Add input variable</v-btn>
         <VariableDialog ref="varDialog" @newVariable="setInputVariable($event)" />
-        <h3>The following inputs are used for your program</h3>
-        <EnvironmentDisplay :data="inputs" :deleteVar="deleteVariable" :editVar="editVariable" />
+        <template v-if="inputs && Object.keys(inputs).length > 0">
+            <h3 class="top-margin">The following inputs are used for your program</h3>
+            <EnvironmentDisplay :data="inputs" :deleteVar="deleteVariable" :editVar="editVariable" />
+        </template>
         <ConfirmDialog ref="confirmDialog" />
     </div>
 </template>
@@ -45,12 +47,12 @@ export default {
             }
         },
         editVariable(name) {
-            this.$refs.varDialog.showDialog('Edit input variable', name, 'Update variable', false, true);
+            this.$refs.varDialog.showDialog('Edit input variable', name, 'Update variable', false, true, this.inputTypes[name], this.inputs[name]);
         },
         deleteVariable(name) {
             this.$refs.confirmDialog.showDialog(
-                'Remove input variable?',
-                `Are you sure you want to remove the input variable '${name}'?`,
+                'Delete input variable?',
+                `Are you sure you want to delete the input variable '${name}'?`,
                 'warning',
                 () => this.deleteInputVariable(name)
             );
@@ -61,7 +63,7 @@ export default {
         newVarName() {
             return 'var_'+(Object.keys(this.inputs).length + 1);
         },
-        ...mapState(useAppStore, ['inputs']),
+        ...mapState(useAppStore, ['inputs', 'inputTypes']),
     },
 };
 </script>
@@ -69,5 +71,9 @@ export default {
 <style scoped>
 .inputCard {
     max-width: 40em;
+}
+
+.top-margin {
+    margin-top: 0.75em;
 }
 </style>
