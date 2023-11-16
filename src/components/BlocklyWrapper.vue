@@ -214,7 +214,6 @@ export default {
 .question-container {
   height: calc(100vh - 64px);
   margin: 0 auto;
-  max-width: 1440px;
 }
 
 .question-main {
