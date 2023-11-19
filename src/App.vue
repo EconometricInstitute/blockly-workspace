@@ -17,11 +17,12 @@
       <BlocklyWrapper ref="blockly" />
       <v-dialog width="800" v-model="welcome">
         <v-card>
-            <v-card-title>Work in Progress</v-card-title>
+            <v-card-title>Blockly Workspace</v-card-title>
             <v-card-text>
                 <v-alert type="info">
-                    This Blockly Workspace is still being finalized.
-                    Some easy-of-use features may still be added before the assignment is finalized.
+                    Welcome to the Blockly Workspace! <br />
+                    For best results, it is recommend to use either Mozilla Firefox, Google Chrome or Microsoft Edge
+                    as your browser. It is possible other browsers, such as Safari, are not working properly.
                 </v-alert>                
             </v-card-text>
             <v-card-actions>

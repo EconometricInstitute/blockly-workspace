@@ -11,7 +11,7 @@ export const useAppStore = defineStore('app', {
     result: null,
     worker: null,
     workspaceJson: null,
-    loading: true,
+    loading: true
   }),
   actions: {
     setInputVariable(input) {
