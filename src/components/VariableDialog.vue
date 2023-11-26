@@ -5,17 +5,19 @@
             <v-card-text>
                 <v-container>
                     <v-row>
-                        <v-text-field density="compact" label="Variable name" :disabled="fixedname" :readonly="fixedname" v-model="name" />
-                        &nbsp;
+                        <v-text-field density="compact" label="Variable name" :disabled="fixedname" :rules="[validName]" :readonly="fixedname" v-model="name" />
+                    </v-row>
+                    <v-row>
                         <v-select v-if="!novalue" density="compact" label="Type" v-model="type" @update:modelValue="setType(type)" :items="types" />
-                        &nbsp;
+                    </v-row>
+                    <v-row>
                         <ValueEdit v-if="!novalue" :type="type" :value="value" @update:modelValue="setValue($event)"/>
                     </v-row>
                 </v-container>                
             </v-card-text>
             <v-card-actions>
                 <v-spacer />
-                <v-btn color="primary" @click="save">{{ okLabel }}</v-btn>
+                <v-btn :disabled="!canSubmit" color="primary" @click="save">{{ okLabel }}</v-btn>
                 <v-btn color="danger" @click="hide">Cancel</v-btn>
             </v-card-actions>
         </v-card>
@@ -24,6 +26,9 @@
 
 <script>
 import ValueEdit from './ValueEdit';
+
+const VARNAME_REGEX = /^[A-Za-z][A-Za-z0-9_]*$/;
+const VARNAME_MSG = 'A variable name should start with a letter, and only contain letters, numbers or underscores.';
 
 export default {
     components: { ValueEdit },
@@ -48,6 +53,11 @@ export default {
         }
 
     }),
+    computed: {
+        canSubmit() {
+            return VARNAME_REGEX.test(this.name);
+        }
+    },
     methods: {
         showDialog(title, varname, okLabel='Add Variable', novalue=false, fixedname=false, type='text', value='some text') {
             this.title = title;
@@ -61,6 +71,9 @@ export default {
             this.value = value;
 
             this.active = true;
+        },
+        validName(name) {
+            return VARNAME_REGEX.test(name) || VARNAME_MSG;
         },
         hide() {
             this.active = false;
